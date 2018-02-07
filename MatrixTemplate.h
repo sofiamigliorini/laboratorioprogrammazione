@@ -29,6 +29,9 @@ public:
     MatrixTemplate& operator + (const MatrixTemplate& M1) throw(std::runtime_error);
     MatrixTemplate& operator - (const MatrixTemplate& M1) throw(std::runtime_error);
     MatrixTemplate& operator * (const MatrixTemplate& M1) throw(std::runtime_error);
+    MatrixTemplate& transpose();
+    int determinant(const MatrixTemplate& M1) throw(std::runtime_error);
+    MatrixTemplate& inverse() throw(std::runtime_error);
 
 private:
     T *m;
