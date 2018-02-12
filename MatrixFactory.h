@@ -5,19 +5,20 @@
 #ifndef LABORATORIOPROGRAMMAZIONE_MATRIXFACTORY_H
 #define LABORATORIOPROGRAMMAZIONE_MATRIXFACTORY_H
 
-#include <string>
 #include "MatrixTemplate.h"
-
 
 class MatrixFactory {
 public:
-    static MatrixTemplate *createMatrix(const std::string& type, int r, int c){
-        if(type=="int")
-            new MatrixTemplate<int>(r,c);
-        else if(type=="char")
-            new MatrixTemplate<char>(r,c);
-        else if(type=="string")
-            new MatrixTemplate<std::string>(r,c);
+    MatrixFactory() = default;
+    virtual ~MatrixFactory() = default;
+
+    template <typename T> MatrixTemplate<T>* createMatrix(int type, int r, int c){
+        if (type == 1)
+            return new MatrixTemplate<int>(r, c);
+        if (type == 2)
+            return new MatrixTemplate<float>(r, c);
+        if (type == 3)
+            return new MatrixTemplate<long>(r, c);
     };
 
 };
