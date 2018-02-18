@@ -15,9 +15,19 @@ public:
         m = new T[r * c];
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++)
-                m[i * columns + j] = 0;
+                m[i * columns + j] = 0; //initialize zero matrix
         }
     };
+
+    MatrixTemplate(const MatrixTemplate &original) {
+        rows = original.rows;
+        columns = original.columns;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++)
+                m[i * columns + j] = original.m[i * original.columns + j];
+        }
+
+    }
 
     virtual ~MatrixTemplate() {
         delete[] m;
@@ -28,19 +38,19 @@ public:
         return rows;
     }
 
-    void setRows(int rows) {
-        MatrixTemplate::rows = rows;
+    void setRows(int r) {
+        rows = r;
     }
 
     int getColumns() const {
         return columns;
     }
 
-    void setColumns(int columns) {
-        MatrixTemplate::columns = columns;
+    void setColumns(int c) {
+        columns = c;
     }
 
-    virtual bool setValue(T value, int x, int y) {
+    bool setValue(T value, int x, int y) {
         if (x >= 0 && x < rows && y >= 0 && y < columns) {
             m[x * columns + y] = value;
             return true;
@@ -55,160 +65,167 @@ public:
             throw std::runtime_error("invalid coordinates");
     };
 
-    MatrixTemplate &getRow(int x) throw(std::runtime_error) {
+    T *getRow(int x) throw(std::runtime_error) {
         if (x >= 0 && x < rows) {
-            MatrixTemplate row(1, this->columns);
+            m2 = new T[1 * columns];
             for (int j = 0; j < columns; j++)
-                row.m[j] = this->m[x * columns + j];
-            return row;
+                m2[j] = m[x * columns + j];
+            return m2;
         } else
             throw std::runtime_error("invalid coordinate");
     };
 
-    MatrixTemplate &getColumn(int y) throw(std::runtime_error) {
+    T *getColumn(int y) throw(std::runtime_error) {
         if (y >= 0 && y < columns) {
-            MatrixTemplate column(this->rows, 1);
+            m2 = new T[rows * 1];
             for (int i = 0; i < rows; i++)
-                column.m[i] = this->m[i * columns + y];
-            return column;
+                m2[i] = m[i * columns + y];
+            return m2;
         } else
             throw std::runtime_error("invalid coordinate");
     };
 
-    MatrixTemplate &operator=(const MatrixTemplate &M1) throw(std::runtime_error) {
-        if (M1.rows != this->rows || M1.columns != this->columns)
+    T *operator=(MatrixTemplate *M1) throw(std::runtime_error) {
+        if (M1->rows != this->rows || M1->columns != this->columns)
             throw std::runtime_error("wrong matrix dimension");
         else
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++)
-                    this->m[i * columns + j] = M1.m[i * columns + j];
+                    this->m[i * columns + j] = M1->m[i * columns + j];
             }
-        return *this;
+        return this;
     };
 
-    bool operator==(const MatrixTemplate &M1) {
-        if (M1.rows != this->rows || M1.columns != this->columns)
+    bool operator==(MatrixTemplate *M1) {
+        if (M1->rows != this->rows || M1->columns != this->columns)
             return false;
         else
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++)
-                    if (M1.m[i * columns + j] != this->m[i * columns + j])
+                    if (M1->m[i * columns + j] != this->m[i * columns + j])
                         return false;
             }
         return true;
     };
 
-    MatrixTemplate &operator+(const MatrixTemplate &M1) throw(std::runtime_error) {
-        if (M1.rows != this->rows || M1.columns != this->columns)
+    T *sum(MatrixTemplate *M1) throw(std::runtime_error) {
+        if (M1->rows != this->rows || M1->columns != this->columns)
             throw std::runtime_error("wrong matrix dimension");
         else {
-            MatrixTemplate M2(M1.rows, M1.columns);
+            m2 = new T[rows * columns];
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++)
-                    M2.m[i * columns + j] = this->m[i * columns + j] + M1.m[i * columns + j];
+                    m2[i * columns + j] = this->m[i * columns + j] + M1->m[i * columns + j];
             }
-            return M2;
+            return m2;
         }
     };
 
-    MatrixTemplate &operator-(const MatrixTemplate &M1) throw(std::runtime_error) {
-        if (M1.rows != this->rows || M1.columns != this->columns)
+    T *sub(MatrixTemplate *M1) throw(std::runtime_error) {
+        if (M1->rows != this->rows || M1->columns != this->columns)
             throw std::runtime_error("wrong matrix dimension");
         else {
-            MatrixTemplate M2(M1.rows, M1.columns);
+            m2 = new T[rows * columns];
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++)
-                    M2.m[i * columns + j] = this->m[i * columns + j] - M1.m[i * columns + j];
+                    m2[i * columns + j] = this->m[i * columns + j] - M1->m[i * columns + j];
             }
-            return M2;
+            return m2;
         }
     };
 
-    MatrixTemplate &operator*(const MatrixTemplate &M1) throw(std::runtime_error) {
-        if (this->columns != M1.rows)
+    T *mul(MatrixTemplate *M1) throw(std::runtime_error) {
+        if (this->columns != M1->rows)
             throw std::runtime_error("wrong matrix dimension");
         else {
-            MatrixTemplate M2(this->rows, M1.columns);
+            m2 = new T[rows * M1->columns];
             for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < M1.columns; j++) {
+                for (int j = 0; j < M1->columns; j++) {
+                    m2[i * M1->columns + j] = 0;
                     for (int k = 0; k < columns; k++)
-                        M2.m[i * j] += this->m[i * columns + k] * M1.m[k * M1.columns + j];
+                        m2[i * M1->columns + j] += this->m[i * columns + k] * M1->m[k * M1->columns + j];
                 }
             }
-            return M2;
+            return m2;
         }
     };
 
-    MatrixTemplate &transpose() {
-        MatrixTemplate M2(this->columns, this->rows);
+    T *transpose() {
+        m2 = new T[columns * rows];
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++)
-                M2.m[j * this->rows + i] = m[i * this->columns + j];
+                m2[j * this->rows + i] = m[i * this->columns + j];
         }
-        return M2;
+        return m2;
     };
 
-    float determinant(const MatrixTemplate &M1) throw(std::runtime_error) {
-        if (M1.rows != M1.columns)
+    int determinant(MatrixTemplate *M1) throw(std::runtime_error) {
+        if (M1->rows != M1->columns)
             throw std::runtime_error("matrix not squared");
         else {
             int det = 0;
-            if (M1.rows == 1)
-                det = M1.m[0];
-            if (M1.rows == 2)
-                det = M1.m[0] * M1.m[3] - M1.m[2] * M1.m[1];
+            if (M1->rows == 1)
+                det = M1->m[0];
+            if (M1->rows == 2)
+                det = M1->m[0] * M1->m[3] - M1->m[2] * M1->m[1];
             else {
-                for (int r = 0; r < M1.rows; r++) {
-                    MatrixTemplate subM(M1.rows - 1, M1.columns - 1);
-                    for (int i = 0; i < M1.rows - 1; i++) {
-                        for (int j = 0; j < M1.columns - 1; j++) {
+                MatrixTemplate<T> *subM;
+                for (int r = 0; r < M1->rows; r++) {
+                    subM = new MatrixTemplate<T>(M1->rows - 1, M1->columns - 1);
+                    for (int i = 0; i < M1->rows - 1; i++) {
+                        for (int j = 0; j < M1->columns - 1; j++) {
                             int subRow = (i < r ? i : i + 1);
                             int subCol = j + 1;
-                            subM.m[i * (M1.columns - 1) + j] = M1.m[subRow * M1.columns + subCol];
+                            subM->m[i * (M1->columns - 1) + j] = M1->m[subRow * M1->columns + subCol];
                         }
                     }
                     if (r % 2 == 0)
-                        det += M1.m[r * M1.columns + 0] * determinant(subM);
+                        det += M1->m[r * M1->columns + 0] * determinant(subM);
                     else
-                        det -= M1.m[r * M1.columns + 0] * determinant(subM);
+                        det -= M1->m[r * M1->columns + 0] * determinant(subM);
                 }
             }
             return det;
         }
     };
 
-    MatrixTemplate &inverse() throw(std::runtime_error) {
+    T *inverse() throw(std::runtime_error) {
         if (rows != columns)
             throw std::runtime_error("matrix not squared");
         else {
-            float det = determinant(*this);
-            if (det == 0)
+            if (determinant(this) == 0)
                 throw std::runtime_error("matrix not inversible");
             else {
-                MatrixTemplate M2(this->rows, this->columns);
-                MatrixTemplate subM(rows - 1, columns - 1);
+                this->m2 = new T[this->rows * this->columns];
                 for (int r = 0; r < rows; r++) {
+                    MatrixTemplate<T> *subM = new MatrixTemplate<T>(rows - 1, columns - 1);
                     for (int c = 0; c < columns; c++) {
                         for (int i = 0; i < rows - 1; i++) {
                             for (int j = 0; j < columns - 1; j++) {
                                 int subRow = (i < r ? i : i + 1);
-                                int subCol = (j < r ? j : j + 1);
-                                subM.m[i * subM.columns + j] = this->m[subRow * columns + subCol];
+                                int subCol = (j < c ? j : j + 1);
+                                subM->m[i * (columns - 1) + j] = this->m[subRow * columns + subCol];
                             }
                         }
                         if ((r + c) % 2 == 0)
-                            M2.m[r * columns + c] = 1 / det * determinant(subM);
+                            this->m2[r * columns + c] = 1 / determinant(this) * determinant(subM);
                         else
-                            M2.m[r * columns + c] = -1 / det * determinant(subM);
+                            this->m2[r * columns + c] = -1 / determinant(this) * determinant(subM);
                     }
 
                 }
-                return M2.transpose();
+                T *tmp = new T[columns * rows];
+                for (int i = 0; i < rows; i++) {
+                    for (int j = 0; j < columns; j++)
+                        tmp[j * this->rows + i] = m2[i * this->columns + j];
+                }
+                return tmp;
             }
         }
     };
 
 private:
+    T *m2;
     T *m;
     int rows;
     int columns;
